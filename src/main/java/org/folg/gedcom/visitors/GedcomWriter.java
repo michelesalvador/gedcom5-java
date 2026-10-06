@@ -167,6 +167,44 @@ public class GedcomWriter extends Visitor {
       }
    }
 
+   // PHON, EMAIL, FAX and WWW follow ADDR in the GEDCOM 5.5.1 ADDRESS_STRUCTURE
+   private void writeContactStrings(ExtensionContainer ec, String phone, String fax, String emailTag, String email, String wwwTag, String www) {
+      writeString("PHON", ec, phone);
+      writeString(emailTag != null ? emailTag : "EMAIL", ec, email);
+      writeString("FAX", ec, fax);
+      writeString(wwwTag != null ? wwwTag : "WWW", ec, www);
+   }
+
+   private void writeContactStrings(Object owner) {
+      if (owner instanceof EventFact) {
+         EventFact o = (EventFact)owner;
+         writeContactStrings(o, o.getPhone(), o.getFax(), o.getEmailTag(), o.getEmail(), o.getWwwTag(), o.getWww());
+      }
+      else if (owner instanceof GeneratorCorporation) {
+         GeneratorCorporation o = (GeneratorCorporation)owner;
+         writeContactStrings(o, o.getPhone(), o.getFax(), o.getEmailTag(), o.getEmail(), o.getWwwTag(), o.getWww());
+      }
+      else if (owner instanceof Person) {
+         Person o = (Person)owner;
+         writeContactStrings(o, o.getPhone(), o.getFax(), o.getEmailTag(), o.getEmail(), o.getWwwTag(), o.getWww());
+      }
+      else if (owner instanceof Repository) {
+         Repository o = (Repository)owner;
+         writeContactStrings(o, o.getPhone(), o.getFax(), o.getEmailTag(), o.getEmail(), o.getWwwTag(), o.getWww());
+      }
+      else if (owner instanceof Submitter) {
+         Submitter o = (Submitter)owner;
+         writeContactStrings(o, o.getPhone(), o.getFax(), o.getEmailTag(), o.getEmail(), o.getWwwTag(), o.getWww());
+      }
+   }
+
+   // when there is an address, contact strings are written in endVisit(Address) so they follow ADDR
+   private void writeContactStringsIfNoAddress(Object owner, Address address) {
+      if (address == null) {
+         writeContactStrings(owner);
+      }
+   }
+
    @Override
    public boolean visit(Address address) {
       write("ADDR", address.getValue());
@@ -228,10 +266,6 @@ public class GedcomWriter extends Visitor {
       writeString("CAUS", eventFact, eventFact.getCause());
       writeString("AGE", eventFact, eventFact.getAge());
       writeString("RIN", eventFact, eventFact.getRin());
-      writeString("PHON", eventFact, eventFact.getPhone());
-      writeString("FAX", eventFact, eventFact.getFax());
-      writeString(eventFact.getEmailTag(), eventFact, eventFact.getEmail());
-      writeString(eventFact.getWwwTag(), eventFact, eventFact.getWww());
       writeString(eventFact.getUidTag(), eventFact, eventFact.getUid());
    }
 
@@ -240,6 +274,7 @@ public class GedcomWriter extends Visitor {
       write(eventFact.getTag(), eventFact.getValue());
       stack.push(eventFact);
       writeEventFactStrings(eventFact);
+      writeContactStringsIfNoAddress(eventFact, eventFact.getAddress());
       return true;
    }
 
@@ -310,10 +345,7 @@ public class GedcomWriter extends Visitor {
    public boolean visit(GeneratorCorporation generatorCorporation) {
       write("CORP", generatorCorporation.getValue());
       stack.push(generatorCorporation);
-      writeString("PHON", generatorCorporation, generatorCorporation.getPhone());
-      writeString("FAX", generatorCorporation, generatorCorporation.getFax());
-      writeString(generatorCorporation.getEmailTag(), generatorCorporation, generatorCorporation.getEmail());
-      writeString(generatorCorporation.getWwwTag(), generatorCorporation, generatorCorporation.getWww());
+      writeContactStringsIfNoAddress(generatorCorporation, generatorCorporation.getAddress());
       return true;
    }
 
@@ -459,9 +491,8 @@ public class GedcomWriter extends Visitor {
       writeRef("ANCI", person, person.getAncestorInterestSubmitterRef());
       writeRef("DESI", person, person.getDescendantInterestSubmitterRef());
       writeString("RFN", person, person.getRecordFileNumber());
-      writeString("PHON", person, person.getPhone());
-      writeString(person.getEmailTag(), person, person.getEmail());
       writePersonFamilyCommonContainerStrings(person);
+      writeContactStringsIfNoAddress(person, person.getAddress());
       return true;
    }
 
@@ -470,11 +501,8 @@ public class GedcomWriter extends Visitor {
       write("REPO", repository.getId(), null, repository.getValue());
       stack.push(repository);
       writeString("NAME", repository, repository.getName());
-      writeString("PHON", repository, repository.getPhone());
-      writeString("FAX", repository, repository.getFax());
       writeString("RIN", repository, repository.getRin());
-      writeString(repository.getEmailTag(), repository, repository.getEmail());
-      writeString(repository.getWwwTag(), repository, repository.getWww());
+      writeContactStringsIfNoAddress(repository, repository.getAddress());
       return true;
    }
 
@@ -605,13 +633,10 @@ public class GedcomWriter extends Visitor {
    public boolean visit(Submitter submitter) {
       write("SUBM", submitter.getId(), null, submitter.getValue());
       stack.push(submitter);
-      writeString("PHON", submitter, submitter.getPhone());
-      writeString("FAX", submitter, submitter.getFax());
       writeString("NAME", submitter, submitter.getName());
       writeString("RIN", submitter, submitter.getRin());
       writeString("LANG", submitter, submitter.getLanguage());
-      writeString(submitter.getWwwTag(), submitter, submitter.getWww());
-      writeString(submitter.getEmailTag(), submitter, submitter.getEmail());
+      writeContactStringsIfNoAddress(submitter, submitter.getAddress());
       return true;
    }
 
@@ -619,6 +644,9 @@ public class GedcomWriter extends Visitor {
    public void endVisit(ExtensionContainer obj) {
       if (!(obj instanceof Gedcom)) {
          stack.pop();
+      }
+      if (obj instanceof Address && !stack.isEmpty()) {
+         writeContactStrings(stack.peek());
       }
    }
 }
