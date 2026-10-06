@@ -228,6 +228,10 @@ public class GedcomWriter extends Visitor {
       writeString("CAUS", eventFact, eventFact.getCause());
       writeString("AGE", eventFact, eventFact.getAge());
       writeString("RIN", eventFact, eventFact.getRin());
+      writeString("PHON", eventFact, eventFact.getPhone());
+      writeString("FAX", eventFact, eventFact.getFax());
+      writeString(eventFact.getEmailTag(), eventFact, eventFact.getEmail());
+      writeString(eventFact.getWwwTag(), eventFact, eventFact.getWww());
       writeString(eventFact.getUidTag(), eventFact, eventFact.getUid());
    }
 
@@ -307,6 +311,8 @@ public class GedcomWriter extends Visitor {
       write("CORP", generatorCorporation.getValue());
       stack.push(generatorCorporation);
       writeString("PHON", generatorCorporation, generatorCorporation.getPhone());
+      writeString("FAX", generatorCorporation, generatorCorporation.getFax());
+      writeString(generatorCorporation.getEmailTag(), generatorCorporation, generatorCorporation.getEmail());
       writeString(generatorCorporation.getWwwTag(), generatorCorporation, generatorCorporation.getWww());
       return true;
    }
@@ -465,6 +471,7 @@ public class GedcomWriter extends Visitor {
       stack.push(repository);
       writeString("NAME", repository, repository.getName());
       writeString("PHON", repository, repository.getPhone());
+      writeString("FAX", repository, repository.getFax());
       writeString("RIN", repository, repository.getRin());
       writeString(repository.getEmailTag(), repository, repository.getEmail());
       writeString(repository.getWwwTag(), repository, repository.getWww());
@@ -599,6 +606,7 @@ public class GedcomWriter extends Visitor {
       write("SUBM", submitter.getId(), null, submitter.getValue());
       stack.push(submitter);
       writeString("PHON", submitter, submitter.getPhone());
+      writeString("FAX", submitter, submitter.getFax());
       writeString("NAME", submitter, submitter.getName());
       writeString("RIN", submitter, submitter.getRin());
       writeString("LANG", submitter, submitter.getLanguage());
